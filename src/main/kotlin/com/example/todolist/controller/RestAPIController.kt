@@ -6,8 +6,10 @@ import org.springframework.web.bind.annotation.RestController
 
 import com.example.todolist.model.ToDoList
 import com.example.todolist.model.ToDoItem
+import com.example.todolist.model.User
 import com.example.todolist.repository.ToDoListRepository
 import com.example.todolist.repository.ToDoItemRepository
+import com.example.todolist.repository.UserRepository
 import org.springframework.web.bind.annotation.RequestParam
 import java.util.*
 
@@ -21,12 +23,18 @@ class RestAPIController {
     @Autowired
     lateinit var listRepository: ToDoListRepository
 
+    @Autowired
+    lateinit var userRepository: UserRepository
+
     @RequestMapping("/save")
     fun save(): String{
 
+        //prepare User data
+        val userClark = User("Clark")
+
         //prepare ToDoList data
-        val work = ToDoList("Work")
-        val home = ToDoList("Home")
+        val work = ToDoList("Work", user = userClark)
+        val home = ToDoList("Home", user = userClark)
 
         //ToDoItem data
         val item0 = ToDoItem("MEDIUM","Go to office",true, work)
@@ -39,8 +47,12 @@ class RestAPIController {
         work.items = listOf(item0, item1)
         home.items = listOf(item2, item3)
 
-        //save to do lists with items to database
-        listRepository.saveAll(listOf(work, home))
+        //set lists under User
+        userClark.lists = listOf(work, home)
+
+        //save User with to do lists with items to database
+        //listRepository.saveAll(listOf(work, home))
+        userRepository.save(userClark)
 
         return "Success!"
 
@@ -63,6 +75,7 @@ class RestAPIController {
     @RequestMapping("/createlist")
     fun createList(@RequestParam params: Map<String, String>): String {
         var listNameParam = params.get("listName")
+        var userIdParam = params.get("userId")!!.toBoolean()
         var categoryParam = params.get("category")
         var taskParam = params.get("task")
         var doneParam = params.get("done")!!.toBoolean()
@@ -77,10 +90,10 @@ class RestAPIController {
     }
 
     @RequestMapping("/findall")
-    fun findAll(): List<ToDoList>{
-        var result: List<ToDoList> = ArrayList()
+    fun findAll(): List<User>{
+        var result: List<User> = ArrayList()
 
-        for(item in listRepository.findAll()){
+        for(item in userRepository.findAll()){
             result += item
         }
 
@@ -189,12 +202,12 @@ class RestAPIController {
 
     @RequestMapping("/deleteall")
     fun deleteAll(): String{
-        listRepository.deleteAll()
+        userRepository.deleteAll()
         return "Items Deleted"
     }
 
-    @RequestMapping("deletebyid")
-    fun deleteById(@RequestParam("id") id: Long): String{
+    @RequestMapping("deleteitem")
+    fun deleteItem(@RequestParam("id") id: Long): String{
         itemRepository.deleteById(id)
         return "Item set to id #$id was deleted."
     }
@@ -203,6 +216,12 @@ class RestAPIController {
     fun deleteList(@RequestParam("id") id: Long): String{
         listRepository.deleteById(id)
         return "List set to id #$id was deleted."
+    }
+
+    @RequestMapping("deleteuser")
+    fun deleteUser(@RequestParam("id") id: Long): String{
+        userRepository.deleteById(id)
+        return "User set to id #$id was deleted."
     }
 
 }

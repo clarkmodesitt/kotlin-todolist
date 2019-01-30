@@ -19,7 +19,6 @@ class ToDoItem (
         @Column
         var done: Boolean = false,
 
-
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "list_id")
         @Cascade(CascadeType.REFRESH, CascadeType.PERSIST)
